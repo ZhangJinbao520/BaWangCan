@@ -21,10 +21,19 @@ _(:ι」∠)_好饿，但是不想动
 睡觉没前途(￣o￣) . z Z　
 
 ## 运行环境
-> 	python 3
+
+ - [Python 3](https://www.python.org/)
+
+## 第三方库
+
+ - 所需的第三库已放置在【***requirements.txt***】，可使用pip进行批量安装。
+```python
+pip install -r requirements.txt
+```
 
 ## 微信推送
-从[Server酱](http://sc.ftqq.com/?c=code)申请SCKEY，并修改【***backendThread.py***】代码。
+
+ - 从[Server酱](http://sc.ftqq.com/?c=code)申请SCKEY，并修改【***backendThread.py***】代码。
 ```python
     def weixinTrap(self):
         '''
