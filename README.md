@@ -1,5 +1,6 @@
 
 
+
 # BaWangCan
 一键报名大众点评霸王餐（免费试）
 
@@ -21,6 +22,17 @@ _(:ι」∠)_好饿，但是不想动
 
 ## 运行环境
 > 	python 3
+
+## 微信推送
+从[Server酱](http://sc.ftqq.com/?c=code)申请SCKEY，并修改【***backendThread.py***】代码。
+```python
+    def weixinTrap(self):
+        '''
+        微信推送
+        '''
+        # 从http://sc.ftqq.com/?c=code获取微信推送的SCKEY，并绑定官微
+        SCKEY = 'SCU155771T3549c0427011a83c02d53a4f054055166012211d21350'    # Server酱申请的SCKEY
+```
 
 ## FAQ 
 ### 1. 如果大众点评城市列表发生变化了，咋办？
