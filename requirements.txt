@@ -1,0 +1,3 @@
+configparser
+PyQt5
+requests
