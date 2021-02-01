@@ -80,5 +80,3 @@ pip install -r requirements.txt
 
 ### 2. 【大众点评免费试.exe】程序太大，大小能优化吗？
 > 当前瓶颈：【***PyQt5***】依赖包太大，生成的文件过大。【暂未找到合适的方法】
-
-> 详情可见：[【Python】大众点评免费试Bug列表](https://www.yuque.com/docs/share/e8433f92-6176-47a2-8211-2e1efcb63d7b?#%20%E3%80%8A%E3%80%90Python%E3%80%91%E5%A4%A7%E4%BC%97%E7%82%B9%E8%AF%84%E5%85%8D%E8%B4%B9%E8%AF%95Bug%E5%88%97%E8%A1%A8%E3%80%8B)
