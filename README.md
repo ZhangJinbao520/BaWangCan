@@ -42,7 +42,7 @@ pip install -r requirements.txt
 ## backendThread线程
 ### 1. linkStatusThread
  - 作用：二维码登录状态的监测线程
- - 信号定义：【***queryQRCodeStatus***】返回的状态码，主要有如下类型
+ - 信号定义：【***queryQRCodeStatus***】返回的状态码，主要有以下类型
 ```python
     def run(self):
         '''
@@ -59,15 +59,11 @@ pip install -r requirements.txt
 
 ### 2. runStatusThread 
  - 作用：Run按钮状态的显示线程
- - 信号定义：N/A
+ - 信号定义：无
 
 ### 3. runResultThread
  - 作用：霸王餐（免费试）的报名线程
- - 信号定义：N/A
- 
-当该线程被调用时，为了防止Run再次调用该线程，有以下两种解决方案：
- 1. 线程锁
- 2. 取消关联线程
+ - 信号定义：无
 
 ## FAQ 
 ### 1. 如果大众点评城市列表发生变化了，咋办？
