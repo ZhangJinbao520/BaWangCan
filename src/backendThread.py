@@ -262,18 +262,19 @@ class runResultThread(QThread):
         # 从http://sc.ftqq.com/?c=code获取微信推送的SCKEY，并绑定官微
         SCKEY = 'SCU155771T3549c0427011a83c02d53a4f054055166012211d21350'    # Server酱申请的SCKEY
         url = 'https://sc.ftqq.com/' + SCKEY + '.send'
+        desp = '''
+{0} ， 用户名：***{1}***
+- 今日报名成功：**{2}**
+- 今日报名重复：**{3}**
+- 今日报名失败：**{4}**
+            '''.format(time.strftime('%Y-%m-%d %H:%M:%S'), self.userNickName, self.PASS, self.SKIP, self.FAIL)
         header = {
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36',
         }
         data = {
             'text': '大众点评免费试运行结果',
-            'desp': '''
-{0} ， 用户名：***{1}***
-- 今日报名成功：**{2}**
-- 今日报名重复：**{3}**
-- 今日报名失败：**{4}**
-            '''.format(time.strftime('%Y-%m-%d %H:%M:%S'), self.userNickName, self.PASS, self.SKIP, self.FAIL),
+            'desp': desp,
         }
         requests.post(url=url, headers=header, data=data)
 
