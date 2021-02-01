@@ -23,139 +23,91 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets, Qt
 from area import dictProvince, dictCity
-from backendThread import linkStatusBackendThread, runStatusBackendThread, runResultBackendThread
+from config import Config
+from backendThread import linkStatusThread, runStatusThread, runResultThread
 import requests, time, re, base64, sys
 
-class NewWidgets(QtWidgets.QWidget):
-    '''
-    作用：QWidget部分事件重写
-    '''
-    def hideEvent(self, event):
-        '''
-        最小化事件重写
-        @ 最小化——>最小化至托盘
-        '''
-        self.setWindowFlags(QtCore.Qt.SplashScreen | QtCore.Qt.FramelessWindowHint)
-    
-    def closeEvent(self, event):    # 父类函数
-        '''
-        关闭事件重写
-        @ 关闭——>关闭提示
-        '''
-        reply = QtWidgets.QMessageBox.question(self, '提示', '你怎么忍心关掉我鸭？', QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
-        if reply == QtWidgets.QMessageBox.Yes:
-            event.accept()
-        elif reply == QtWidgets.QMessageBox.No:
-            event.ignore()
-
-class Ui_Login(object):
+class Ui_Login(QtWidgets.QWidget):
     '''
     登录界面(二维码)
     '''
-    def __init__(self, Login=None):
+    def __init__(self):
         super().__init__()
-        self.Login = Login
         self.setupUi()
 
     def setupUi(self):
         # 窗口定义
-        self.Login.setObjectName("Login")
-        self.Login.resize(290, 358)
-        self.Login.setMinimumSize(QtCore.QSize(290, 358))
-        self.Login.setMaximumSize(QtCore.QSize(290, 358))
-        self.Login.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        self.Login.setStyleSheet("background-color: rgba(255, 255, 255, 255);border-width:0;border-style:outset;")
+        self.setFixedSize(290, 358)
+        self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)    # 只保留关闭按钮
+        self.setStyleSheet("background-color: rgba(255, 255, 255, 255);border-width:0;border-style:outset;")
         # 应用图标
         ico = 'https://www.dpfile.com/app/pc-common/dp_favicon.a4af753914321c8e82e402e2b4be01d7.ico'
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(self.getImgFromInternet(ico)['img']), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.Login.setWindowIcon(icon)
-        # 主界面
-        self.getQRCode = QtWidgets.QWidget(self.Login)
-        # self.getQRCode.setStyleSheet("background-color: rgba(255, 255, 255, 255);border-width:0;border-style:outset;")
-        self.getQRCode.setObjectName("getQRCode")
+        self.setWindowIcon(icon)
         # QRCode
-        url = 'https://account.dianping.com/account/getqrcodeimg'
-        self.QRCode = self.getImgFromInternet(url)    # 一个QRCode对应一个lgtoken
-        self.iconQRCode = QtWidgets.QLabel(self.getQRCode)
+        self.iconQRCode = QtWidgets.QLabel(self)
         self.iconQRCode.setGeometry(QtCore.QRect(65, 75, 160, 160))
-        self.iconQRCode.setPixmap(QtGui.QPixmap(self.QRCode['img']))
         self.iconQRCode.setScaledContents(True)
-        self.iconQRCode.setObjectName("iconQRCode")
+        self.setQRCodeFromImg()
         # icon-scan
         src = 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGwAAABjCAMAAABJ7hUqAAAAkFBMVEUAAAD/ZTL/ZDH/ZTT/XzD/ZjL/ZTP/ZjP/ZTP/ZzP/ZTL/aD//ZzP/ZDH/YC3/ZzP/aiv/ZjP/ZjL/ZTL/aDP/ZzT/ZjL/ZjL/ZDH/ZDL/ZDL/ZTL/ZjP/ZTP/ZjL/ZjL/ZjP/ZTL/ZjP/ZjL/ZTL/ZDH/ZjH/ZDP/ZDD/ZjP/ZTL/ZTL/ZDD/ZC7/ZjP/aDT9p+krAAAALnRSTlMA0VRTDQrA08/6QAPxHhLmBfablP3txndiS0Ym2cqvcL2nhX5nXFcrOeK1iiMxq6ndNAAAAeVJREFUaN7t2ltv4jAQBeBjGghxQrgn3Eq50227nv//71aIZNMqdqgEnod2vsdI9sEyeZjo4JNAv2eqW6M2czR6Xauulcp2ug2bNA8NkbGgaBfDbTYk40BkVJ6iZhGSe81kAadzQqYBUVfbfp4bjeH0QqYZJUd88RQ1LqERnPZkbqDhl0v/6DevoBmc9MTcQn96qIz+Z5HVWxtO8YicbNewTKg88EqFNdk+QIPBSye0Uquo3Hfaq91xND6nQd0ANwwCu/Q8mtTuYX0No3c83LjYeotC/EzlNT5cr3/d+znGVVtdH3TweIPiIKrNEIYNZ1hHwiRMwiRMwiTsJ4aF/sPCMiwuHmzhwbY4SIzCkegyGGl4sIgue09OKMX5lKh/gBeHPtE0j1FZnlo9eNJrnZYQQoj7pbr15F1LB5es+SoiBlG4AF4TMixo+hcdMkzoDYbPkPNka9Y74/w3Fu8ZAx1ACCHuwD/FDPaX+WyGkpf5jG/ypCM4Zup1OVNzfi34BR9dJEzCJEzCJEzC/IZt4MHGEZah4qlbULUm+gytCaY+SL3psvTVdDnYOzw13+nwKKvVsNw3+eBvJ/H3rjBnaJRVZglHV66kuwwtwPv7jYekqd8Y5ilsAr3LVN03mpuhsst2OkDlH1u1nVI15N1TAAAAAElFTkSuQmCC)'
-        self.iconScan = QtWidgets.QLabel(self.getQRCode)
+        self.iconScan = QtWidgets.QLabel(self)
         self.iconScan.setGeometry(QtCore.QRect(65, 265, 35, 35))
         self.iconScan.setPixmap(QtGui.QPixmap(self.getImgFromBase64(src)))
         self.iconScan.setScaledContents(True)
-        self.iconScan.setObjectName("iconScan")
         # icon-Mobile
         src = 'url(data:image/png;base64,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)'
-        self.iconMobile = QtWidgets.QLabel(self.getQRCode)
+        self.iconMobile = QtWidgets.QLabel(self)
         self.iconMobile.setGeometry(QtCore.QRect(90, 75, 110, 170))
         self.iconMobile.setPixmap(QtGui.QPixmap(self.getImgFromBase64(src)))
         self.iconMobile.setScaledContents(True)
-        self.iconMobile.setObjectName("iconMobile")
         # "打开大众点评，扫描二维码登录"
-        self.content = QtWidgets.QTextBrowser(self.getQRCode)
+        self.content = QtWidgets.QTextBrowser(self)
         self.content.setGeometry(QtCore.QRect(105, 260, 140, 50))
-        self.content.setObjectName("content")
         # "二维码超时"
-        self.contentQRCodeInvalid = QtWidgets.QTextBrowser(self.getQRCode)
+        self.contentQRCodeInvalid = QtWidgets.QTextBrowser(self)
         self.contentQRCodeInvalid.setGeometry(QtCore.QRect(65, 75, 160, 160))
         self.contentQRCodeInvalid.setStyleSheet("background-color: rgba(255, 255, 255, 230);")
-        self.contentQRCodeInvalid.setObjectName("contentQRCodeInvalid")
         # "APP扫码，享七天免登录"
-        self.contentSubtitle = QtWidgets.QTextBrowser(self.getQRCode)
+        self.contentSubtitle = QtWidgets.QTextBrowser(self)
         self.contentSubtitle.setGeometry(QtCore.QRect(22, 30, 246, 30))
-        self.contentSubtitle.setObjectName("contentSubtitle")
         # "扫描成功！请在手机上确认登录"
-        self.contentSuccess = QtWidgets.QTextBrowser(self.getQRCode)
+        self.contentSuccess = QtWidgets.QTextBrowser(self)
         self.contentSuccess.setGeometry(QtCore.QRect(10, 260, 270, 50))
-        self.contentSuccess.setObjectName("contentSuccess")
         # 请点击刷新
-        self.btnRefresh = QtWidgets.QPushButton(self.getQRCode)
+        self.btnRefresh = QtWidgets.QPushButton(self)
         self.btnRefresh.setGeometry(QtCore.QRect(97, 158, 96, 34))
         self.btnRefresh.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))    # 设置鼠标手势
         self.btnRefresh.setStyleSheet("font: 12pt bold;color: rgb(255, 255, 255);background-color: rgba(255, 102, 51, 240);")
         self.btnRefresh.setObjectName("btnRefresh")
-        ###
-        # UI初始化
+        # 信号关联槽位
+        QtCore.QMetaObject.connectSlotsByName(self)    # 自动连接槽，使得装饰器@QtCore.pyqtSlot可生效
+        self.backend = linkStatusThread(self.QRCode['lgtoken'])    # 创建线程
+        self.backend.linkStatus.connect(self.queryQRCodeStatus)   # 连接信号
+        self.backend.start()    # 开始线程
+        # Ui初始化
         self.retranslateUi()
-        # self.retranslateUi(Login)
-        self.iconQRCode.raise_()
-        self.iconMobile.raise_()
         self.contentQRCodeInvalid.raise_()
         self.btnRefresh.raise_()
         self.iconMobile.hide()
         self.contentQRCodeInvalid.hide()
         self.btnRefresh.hide()
-        self.iconScan.raise_()
-        self.content.raise_()
-        self.contentSuccess.raise_()
         self.contentSuccess.hide()
-        # 信号关联槽位
-        QtCore.QMetaObject.connectSlotsByName(self.Login)    # 自动连接槽
-        self.backend = linkStatusBackendThread(self.QRCode['lgtoken'])    # 创建线程
-        self.backend.linkStatus.connect(self.queryQRCodeStatus)   # 连接信号
-        self.backend.start()    # 开始线程
-        self.btnRefresh.clicked.connect(self.on_btnRefresh_clicked)    # 关联按钮事件（规避方法）
-        #
-        # self.Login.setCentralWidget(self.getQRCode)
-        self.Login.show()
+        self.show()
 
-    # @Qt.pyqtSlot()------装饰器不起作用？？？
-    def on_btnRefresh_clicked(self):
-        url = 'https://account.dianping.com/account/getqrcodeimg'
-        self.QRCode = self.getImgFromInternet(url)
+    def setQRCodeFromImg(self):
+        self.QRCode = self.getImgFromInternet('https://account.dianping.com/account/getqrcodeimg')
         self.iconQRCode.setPixmap(QtGui.QPixmap(self.QRCode['img']))
-        self.iconQRCode.update()
+
+    @QtCore.pyqtSlot()
+    def on_btnRefresh_clicked(self):
+        self.setQRCodeFromImg()
         self.contentQRCodeInvalid.hide()
         self.btnRefresh.hide()
-        #
-        self.backend.lgtoken = self.QRCode['lgtoken']
-        self.backend.start()
-    
+        # self.backend.lgtoken = self.QRCode['lgtoken']???
+        self.backend.start(self.QRCode['lgtoken'])
+
     def queryQRCodeStatus(self, status):
         '''
         QRCode登录状态
@@ -180,9 +132,8 @@ class Ui_Login(object):
         elif status == 2:
             # 确认登录
             self.backend.terminate()    # 终止线程
-            self.Login.close()
-            #
-            self.Ui = TrayIcon(New)
+            self.close()
+            TrayIcon(self.Cookie)
         else:
             # 连接超时、或用户取消登录、或异常
             if status == 3:
@@ -195,6 +146,26 @@ class Ui_Login(object):
             self.contentQRCodeInvalid.show()
             self.btnRefresh.show()
             self.backend.terminate()    # 终止线程
+
+    def retranslateUi(self):
+        '''
+        文字以及文字编码
+        '''
+        _translate = QtCore.QCoreApplication.translate
+        self.setWindowTitle(_translate("Login", "大众点评"))
+        self.content.setHtml(_translate("Login", 
+        "<span style=\" font-family:\'Tahoma\',\'sans-serif\'; font-size:11pt; color:#999999;\">打开</span>"
+        "<span style=\" font-family:\'Tahoma\',\'sans-serif\'; font-size:11pt; color:#ff6633;\">大众点评APP</span>\n"
+        "<span style=\" font-family:\'Tahoma\',\'sans-serif\'; font-size:11pt; color:#999999;\">扫描二维码登录</span>"))
+        self.contentQRCodeInvalid.setHtml(_translate("Login", 
+        "<br><br><br>"
+        "<p align=\"center\"><span style=\" font-family:\'Tahoma\',\'sans-serif\'; font-size:12pt; font-weight:600; color:#333333;\">二维码已失效</span></p>"))
+        self.contentSubtitle.setHtml(_translate("Login", 
+        "<p align=\"center\"><span style=\" font-family:\'Tahoma\',\'sans-serif\'; font-size:14px; color:#999999;\">APP扫码，享七天免登录</span></p>"))
+        self.btnRefresh.setText(_translate("Login", "请点击刷新"))
+        self.contentSuccess.setHtml(_translate("Login",
+        "<p align=\"center\" style=\" margin-top:0px; margin-bottom:2px;\"><span style=\" font-family:\'Tahoma\',\'sans-serif\'; font-size:16px; color:#111111;\">扫描成功！</span></p>"
+        "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px;\"><span style=\" font-family:\'Tahoma\',\'sans-serif\'; font-size:13px; color:#111111;\">请在手机上确认登录</span></p>"))
 
     @staticmethod
     def getImgFromBase64(src):
@@ -215,74 +186,36 @@ class Ui_Login(object):
         response = requests.get(url=url, headers=headers)
         img = QtGui.QImage.fromData(response.content)    # 返回bytes类型
         try:
-            lgtoken = re.search(r'lgtoken=(.*); Domain(.*)', response.headers['set-Cookie'])[1]    # 返回lgtoken，用于queryQRCodeStatus
+            # 返回lgtoken，用于queryQRCodeStatus(一个QRCode对应一个lgtoken)
+            lgtoken = re.search(r'lgtoken=(.*); Domain(.*)', response.headers['set-Cookie'])[1]
         except:
             lgtoken = None
         return {'img': img, 'lgtoken': lgtoken}
 
-    def retranslateUi(self):
-        '''
-        文字以及文字编码
-        '''
-        _translate = QtCore.QCoreApplication.translate
-        self.Login.setWindowTitle(_translate("Login", "大众点评"))
-        self.content.setHtml(_translate("Login", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-        "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-        "p, li { white-space: pre-wrap; }\n"
-        "</style></head><body style=\" font-family:\'Agency FB\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-        "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Tahoma\',\'sans-serif\'; font-size:11pt; color:#999999;\">打开</span><span style=\" font-family:\'Tahoma\',\'sans-serif\'; font-size:11pt; color:#ff6633;\">大众点评APP</span></p>\n"
-        "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Tahoma\',\'sans-serif\'; font-size:11pt; color:#999999;\">扫描二维码登录</span></p></body></html>"))
-        self.contentQRCodeInvalid.setHtml(_translate("Login", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-        "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-        "p, li { white-space: pre-wrap; }\n"
-        "</style></head><body style=\" font-family:\'Tahoma\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-        "<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'SimSun\';\"><br /></p>\n"
-        "<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'Tahoma\',\'sans-serif\'; font-size:12pt; font-weight:600; color:#333333;\"><br /></p>\n"
-        "<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'Tahoma\',\'sans-serif\'; font-size:12pt; font-weight:600; color:#333333;\"><br /></p>\n"
-        "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Tahoma\',\'sans-serif\'; font-size:12pt; font-weight:600; color:#333333;\">二维码已失效</span></p></body></html>"))
-        self.contentSubtitle.setHtml(_translate("Login", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-        "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-        "p, li { white-space: pre-wrap; }\n"
-        "</style></head><body style=\" font-family:\'SimSun\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-        "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Tahoma\',\'sans-serif\'; font-size:14px; color:#999999;\">APP扫码，享七天免登录</span></p></body></html>"))
-        self.btnRefresh.setText(_translate("Login", "请点击刷新"))
-        self.contentSuccess.setHtml(_translate("Login", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-        "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-        "p, li { white-space: pre-wrap; }\n"
-        "</style></head><body style=\" font-family:\'SimSun\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-        "<p align=\"center\" style=\" margin-top:0px; margin-bottom:2px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; line-height:22px;\"><span style=\" font-family:\'Tahoma\',\'sans-serif\'; font-size:16px; color:#111111;\">扫描成功！</span></p>\n"
-        "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Tahoma\',\'sans-serif\'; font-size:13px; color:#111111;\">请在手机上确认登录</span></p></body></html>"))
-
-class Ui_Run(object):
+class Ui_Run(QtWidgets.QWidget):
     '''
     主界面
     '''
-    def __init__(self, cookie=None, province=None, city=None, Run=None):
+    def __init__(self, cookie, province=None, city=None):
         super().__init__()
         self.Cookie = cookie
         self.Province = province
         self.City = city
         self.getUserinfo()
-        self.Run = Run
-        # self.setupUi()
 
     def setupUi(self):
         # 窗口定义
-        self.Run.setObjectName("Run")
-        self.Run.resize(480, 207)
-        self.Run.setMinimumSize(QtCore.QSize(480, 207))
-        self.Run.setMaximumSize(QtCore.QSize(480, 207))
+        self.setFixedSize(480, 207)
+        self.Run = QtWidgets.QWidget(self)
+        self.Run.setGeometry(QtCore.QRect(0, 0, 480, 207))
+        self.Run.setStyleSheet("background-color: rgba(255, 255, 255, 255);border-width:0;border-style:outset;")
         # 应用图标
         ico = 'https://www.dpfile.com/app/pc-common/dp_favicon.a4af753914321c8e82e402e2b4be01d7.ico'
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(Ui_Login.getImgFromInternet(ico)['img']), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.Run.setWindowIcon(icon)
-        # 主界面
-        self.Start = QtWidgets.QWidget(self.Run)
-        self.Start.setObjectName("Start")
-        self.Start.setStyleSheet("background-color: rgba(255, 255, 255, 255);border-width:0;border-style:outset;")
+        self.setWindowIcon(icon)
         # "省份"下拉列表
-        self.boxProvince = QtWidgets.QComboBox(self.Start)
+        self.boxProvince = QtWidgets.QComboBox(self.Run)
         self.boxProvince.setGeometry(QtCore.QRect(360, 10, 112, 25))
         self.boxProvince.setStyleSheet('font: 11pt "华文楷体";border: 1px solid rgb(171, 171, 171);border-radius: 2px;')
         self.boxProvince.setObjectName("boxProvince")
@@ -296,10 +229,9 @@ class Ui_Run(object):
             else:
                 self.boxProvince.addItem(key)    # 参数：text、index
         # "城市"下拉列表
-        self.boxCity = QtWidgets.QComboBox(self.Start)
+        self.boxCity = QtWidgets.QComboBox(self.Run)
         self.boxCity.setGeometry(QtCore.QRect(360, 55, 112, 25))
         self.boxCity.setStyleSheet('font: 11pt "华文楷体";border: 1px solid rgb(171, 171, 171);border-radius: 2px;')
-        self.boxCity.setObjectName("boxCity")
         if self.City:
             self.boxCity.addItem(self.City)
             for key, value in dictCity[self.boxProvince.currentText()].items():
@@ -310,69 +242,52 @@ class Ui_Run(object):
         else:
             self.boxCity.addItem('请选择')
         # "开始执行"
-        self.btnRun = QtWidgets.QPushButton(self.Start)
+        self.btnRun = QtWidgets.QPushButton(self.Run)
         self.btnRun.setGeometry(QtCore.QRect(300, 120, 120, 45))
         self.btnRun.setStyleSheet('font: 16pt bold;background-color: rgba(240, 240, 240, 250);border: 1px solid rgb(160, 160, 160);border-radius: 6px;')
-        self.btnRun.setObjectName("Run")
-        # self.btnRun.setMouseTracking(True)
-        # self.btnRun.setFocusPolicy(QtCore.Qt.ClickFocus)
-        # self.btnRun.setAutoFillBackground(True)
+        self.btnRun.setObjectName("btnRun")
         # "头像"
-        self.iconUser = QtWidgets.QLabel(self.Start)
+        self.iconUser = QtWidgets.QLabel(self.Run)
         self.iconUser.setScaledContents(True)
         self.setImgCycle(self.userFace)
-        # self.iconUser.setStyleSheet("border-width: 0 0 0 0;border-radius: 45px !important;border-image: url(imgUser)")     # 使用"border-radius"只能传入URL
-        self.iconUser.setObjectName("iconUser")
         # 账户等级
-        self.iconLevel = QtWidgets.QLabel(self.Start)
-        self.iconLevel.setGeometry(QtCore.QRect(150, 99, 35, 15))
+        self.iconLevel = QtWidgets.QLabel(self.Run)
+        self.iconLevel.setGeometry(QtCore.QRect(150, 110, 35, 15))
         self.iconLevel.setPixmap(QtGui.QPixmap(Ui_Login.getImgFromBase64(self.userLevel)))
         self.iconLevel.setScaledContents(True)
-        self.iconLevel.setObjectName("iconLevel")
-        # 收藏
-        self.contentOpt = QtWidgets.QTextBrowser(self.Start)
-        self.contentOpt.setGeometry(QtCore.QRect(0, 149, 240, 51))
+        # 收藏&团购券
+        self.contentOpt = QtWidgets.QTextBrowser(self.Run)
+        self.contentOpt.setGeometry(QtCore.QRect(0, 163, 240, 55))
         self.contentOpt.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.contentOpt.setObjectName("contentOpt")
         # 注册时间
-        self.contentUseday = QtWidgets.QTextBrowser(self.Start)
-        self.contentUseday.setGeometry(QtCore.QRect(0, 121, 240, 25))
+        self.contentUseday = QtWidgets.QTextBrowser(self.Run)
+        self.contentUseday.setGeometry(QtCore.QRect(0, 134, 240, 25))
         self.contentUseday.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.contentUseday.setObjectName("contentUseday")
         # 昵称
-        self.contentUser = QtWidgets.QTextBrowser(self.Start)
-        self.contentUser.setGeometry(QtCore.QRect(0, 93, 150, 25))
+        self.contentUser = QtWidgets.QTextBrowser(self.Run)
+        self.contentUser.setGeometry(QtCore.QRect(0, 105, 150, 25))
         self.contentUser.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.contentUser.setObjectName("contentUser")
         # "请选择省份"
-        self.contentProvince = QtWidgets.QTextBrowser(self.Start)
+        self.contentProvince = QtWidgets.QTextBrowser(self.Run)
         self.contentProvince.setGeometry(QtCore.QRect(240, 12, 120, 25))
-        self.contentProvince.setObjectName("contentProvince")
         # "请选择城市"
-        self.contentCity = QtWidgets.QTextBrowser(self.Start)
+        self.contentCity = QtWidgets.QTextBrowser(self.Run)
         self.contentCity.setGeometry(QtCore.QRect(240, 57, 120, 25))
-        self.contentCity.setObjectName("contentCity")
         # 信号关联槽位
-        QtCore.QMetaObject.connectSlotsByName(self.Run)    # 自动连接槽
-        self.btnRun.clicked.connect(self.on_btnRun_clicked)
-        self.boxProvince.activated.connect(self.on_boxProvince_activated)
-        self.backendStatus = runStatusBackendThread()    # 创建线程_1
-        self.backendStatus.runStatus.connect(self.on_btnRun_activated)   # 连接信号
-        self.backendResult = runResultBackendThread()    # 创建线程_2
+        QtCore.QMetaObject.connectSlotsByName(self)    # 自动连接槽，使得装饰器@QtCore.pyqtSlot可生效
+        self.backendStatus = runStatusThread()    # 创建线程_1
+        self.backendStatus.runStatus.connect(self.on_btnRun_refreshed)   # 连接信号
+        self.backendResult = runResultThread(self.Cookie, self.userNickName)    # 创建线程_2
         self.backendResult.runResult.connect(self.on_btnRun_finished)
-        self.Run.hideEvent
-        #
+        # Ui初始化
         self.retranslateUi()
-        # self.retranslateUi(self.Run)
-        # self.Run.setCentralWidget(self.Start)
-        self.Run.show()
+        self.show()
 
-    # @classmethod
     def getUserinfo(self):
         '''
         获取个人信息
         '''
-        url = 'http://www.dianping.com/ajax/userinfo'
+        url = 'http://www.dianping.com/ajax/userinfo'    # 获取个人信息的URL
         headers = {
             'cookie': self.Cookie,
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36'
@@ -402,27 +317,9 @@ class Ui_Run(object):
                     self.userLevel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD4AAAAaCAMAAADYIh9WAAAAflBMVEUAAAD6vAD6vAD6vAD6vAD////wthn0uA/3ugn2uQz4uwXwtxzztxP//vvxvCz++vDyvzPytxX++Oj43ZP657Hzxkzzw0D88tP878v65Kn43I731Xr1zWDxuiT+/Pf99uH768D66Lf54qH54Jr32IP20W70yVPywDj99Nz203PmtLLWAAAABHRSTlMA5kpJG2qUMwAAAT1JREFUOMu1lMlywjAQRENQe0aLF3kHzE5Y/v8HI4kD4RAiO0VXSbdXM91dNR8/NZ+JUZrNn3BHj+SfcDFab8ApcaLJeAKn5DdCMRk5FWdT3A67lZyEK2p2SBdDNmk66yOwK4jjvLMNId7TtKz0Hqg1x0Znezi1SnAD9JYqoNMqOnn+gtNSClMDA7UpcC7ateHI4nQJ4GpVkWKraQGkpXv7IrI4uQzbywpYSZ0D5Wno3F+oKFxlqd9+nSNfqwuAk+RsA9QUhQfTuJ58AKoBcGMRPOg4nD2DHJtMqBbeguAVgCwOF7aD18Ft671XMtSR/z39Lhu6Sy8uKzoAvRE+x+Nr7w8lLjZgb0KOJXA27t9mKhb3w9BwqPHSYVNv0b/unZKHSNHjdrAejovqbHjqsWIiye+4df8/1J+zkfTnN79iIPr6k2tiAAAAAElFTkSuQmCC'
                 elif imgLevel == 7:
                     self.userLevel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD4AAAAaCAMAAADYIh9WAAABOFBMVEUAAAD/yVf/ZjP/ZjP/si3/rCT/ZjP/rCT/rCT/rCT/uDr/rCT/rCT/x1P/x1T/ZjP/xE7/xlH/rCT/w0z/rCT/rCT/rCT/rCT/wkv/rCT/rCT/rCT/vkP/rCT/rCT/xlL/wUn/ZjP/////zFz/rCT/6gD/28//cEH/zFv/4df/r5T/mXf/6+T/aDT/lHD/ajn//Pv/wEf/ryj/+PX/5t3/49r/qYz/oYL/nHv/hFv/fE//dkj/dzH/bjH/4Rv/8Ov/3dL/zb3/tp3/h17/zlj/ylj/z1T/x1P/wVH/fFH/xU//0kr/sUr/okL/vUH/uj3/1jz/uDn/tjX/gjT/cjT/3Cv/nSf/oyb/rSX/3iT/qST/4xX/5wr/6QT/8+//7+r/x7T/vqj/f1T/izf/qy3/hyz/jyr/lymUD5ALAAAAIXRSTlMA/uZJ/u3n38gYCPn18+jk1L+xm5Z4aVtXTkI3Ni0kIg/gNnfgAAABzUlEQVQ4y8XTZ1PCQBCA4SD23nvby0WimISmiCD23nvv7f//A3c3mAtmmAmffD/A7TDPzOYyaNxoRMc2ihv4GSlA2GqirCfbSJtFo2ji944V3jPv1KlLwzAu6XAAoSPdw/rEoE7oeFgNHzSJ7D8yf9ynxzgPzyf42rYeDLeHLbq+i7C8uZ20eW/8dl+6PiHEFARyYl7Mu3Tq1lDd8vVV4AvitznmjZLa01V7EruqwO1pKo0/zjBvapDYmY+f4Xy9pHgw6xl/3GWujdWR3/b0Nk53F6D4WxyjJ43F4zmg1nl3l2vDLQhOPX6KugA+nhPYPB7WhLCBWuPdmWMDyG8iJR25kfIcFMdW3KPzJDIWUBnenTnVh/64xI+l/IRyHhdYHrJCZHlexHEaFNd6pUxtst5MyS/4w51l2t7KiGWH53naXXGsW8oj5kfyG/ycm6Gz7ZkpHBfLeHOjTJmozdSVFeT5BF21SMd4iiV4dz+n159EnsQXHuTwIqhX4LK8u+LceF2tqZsfpIN8nXQiD9yq2l1xbaQ1qScL4EVglrPdd7cKnJPm3UtcNVSrv4OPey24/5QccDbtrriq/xCqTfMH/8prqtX1ZTxaX53uiP4Al/7RDyxDAioAAAAASUVORK5CYII='
-                return 1
+                return True
         else:
-            return 0
-
-    @staticmethod
-    def getCookieValid(cookie):
-        '''
-        返回cookie有效性
-        '''
-        url = 'http://www.dianping.com/ajax/userinfo'
-        headers = {
-            'cookie': cookie,
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36'
-        }
-        response = requests.get(url=url, headers=headers)
-        if response.status_code == 200:
-            status = response.json()['msg']['isLogined']
-            if status:
-                return 1
-            else:
-                return 0
+            return False
 
     def setImgCycle(self, url):
         '''
@@ -430,120 +327,110 @@ class Ui_Run(object):
         '''
         self.target = QtGui.QPixmap(QtCore.QSize(240, 100))
         self.target.fill(QtCore.Qt.transparent)
-        img = QtGui.QPixmap(Ui_Login.getImgFromInternet(url)['img']).scaled(90, 90, QtCore.Qt.KeepAspectRatioByExpanding, QtCore.Qt.SmoothTransformation)
+        img = QtGui.QPixmap(Ui_Login.getImgFromInternet(url)['img']).scaled(100, 100, QtCore.Qt.KeepAspectRatioByExpanding, QtCore.Qt.SmoothTransformation)
         # 绘制圆形
         path = QtGui.QPainterPath()
-        path.addRoundedRect(70, 0, 90, 90, 45, 45)
+        path.addRoundedRect(70, 1, 100, 100, 50, 50)
         painter = QtGui.QPainter(self.target)
         painter.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.HighQualityAntialiasing | QtGui.QPainter.SmoothPixmapTransform)
         painter.setClipPath(path)
-        # 绘图，叠加
-        painter.drawPixmap(70, 0, img)
+        # 绘图，裁剪，合并
+        painter.drawPixmap(70, 1, img)
         self.iconUser.setPixmap(self.target)
 
-    # @QtCore.pyqtSlot()
-    def on_boxProvince_activated(self):
+    @QtCore.pyqtSlot(str)
+    def on_boxProvince_activated(self, text):
         self.boxCity.clear()    # 清空列表
-        if self.boxProvince.currentTextChanged:
-            if self.boxProvince.currentText() != "请选择":
-                for key, value in dictCity[self.boxProvince.currentText()].items():
-                    self.boxCity.addItem(key)    # text，index
-            else:
-                self.boxCity.addItem("请选择")
+        if text != "请选择":
+            for key, value in dictCity[text].items():
+                self.boxCity.addItem(key)    # text，index
         else:
             self.boxCity.addItem("请选择")
 
-    # @QtCore.pyqtSlot()
+    @QtCore.pyqtSlot()
     def on_btnRun_clicked(self):
         '''
         按钮点击事件
         '''
         if self.boxCity.currentText() != "请选择":
-            _translate = QtCore.QCoreApplication.translate
-            self.btnRun.setText(_translate("Run", "执行中.. "))
             self.backendStatus.currentText = self.btnRun.text()
-            self.backendStatus.start()    # 开始线程
-            self.backendResult.Cookie = self.Cookie
-            self.backendResult.City = dictCity[self.boxProvince.currentText()][self.boxCity.currentText()]
-            self.backendResult.userNickName = self.userNickName
-            self.backendResult.start()    # 开始线程
+            self.backendStatus.start()    # 开始线程_1
+            self.backendResult.start()    # 开始线程_2
             # 保存'config.ini'
-            linkStatusBackendThread.saveConfig('config.ini', 'Province', 'Province', self.boxProvince.currentText())
-            linkStatusBackendThread.saveConfig('config.ini', 'City', 'City', self.boxCity.currentText())
-            self.btnRun.clicked.disconnect(self.on_btnRun_clicked)
+            Config().saveConfig('Province', 'Province', self.boxProvince.currentText())
+            Config().saveConfig('City', 'City', self.boxCity.currentText())
     
-    # @QtCore.pyqtSlot()
-    def on_btnRun_activated(self):
+    def on_btnRun_refreshed(self, text):
         '''
         按钮刷新事件
         '''
+        self.btnRun.setText(text)
         self.backendStatus.currentText = self.btnRun.text()
 
-    # @QtCore.pyqtSlot()
     def on_btnRun_finished(self):
         '''
         按钮执行事件
         '''
-        _translate = QtCore.QCoreApplication.translate
-        self.btnRun.setText(_translate("Run", "Run"))
-        self.btnRun.clicked.connect(self.on_btnRun_clicked)
-        self.backendStatus.terminate()    # 结束线程
-        self.backendResult.terminate()    # 结束线程
-        #
-        QtWidgets.QMessageBox.information(self.Run, '提示', '执行已完成！')
+        self.backendStatus.terminate()    # 结束线程_1
+        self.backendResult.terminate()    # 结束线程_2
+        self.btnRun.setText("Run")
+        QtWidgets.QMessageBox.information(self, '提示', '执行已完成！')
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
         localhour = int(time.strftime('%H'))
         if localhour >=6 and localhour <12:
-            self.hello = "上午好，"
+            hello = "上午好， "
         elif localhour >=12 and localhour <18:
-            self.hello = "下午好，"
+            hello = "下午好， "
         else:
-            self.hello = "晚上好，"
-        self.Run.setWindowTitle(_translate("Run", "大众点评免费试"))
+            hello = "晚上好， "
+        self.setWindowTitle(_translate("Run", "大众点评免费试"))
         self.btnRun.setText(_translate("Run", "Run"))
-        self.contentOpt.setHtml(_translate("Run", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-        "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-        "p, li { white-space: pre-wrap; }\n"
-        "</style></head><body style=\" font-family:\'SimSun\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-        "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#000000; background-color:#ffffff;\">   </span><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; text-decoration: underline; color:#999999;\">收藏</span></a><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#000000; background-color:#ffffff;\">    |   </span><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; text-decoration: underline; color:#999999;\">团购券</span></a></p>\n"
-        "<p align=\"center\" style=\" margin-top:5px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; line-height:12px;\"><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#333333;\">" + str(self.favorShopCount) + "</span></a><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#000000; background-color:#ffffff;\">    |    </span><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#333333;\">" + str(self.dealCount) + "</span></a></p></body></html>"))
-        self.contentUseday.setHtml(_translate("Run", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-        "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-        "p, li { white-space: pre-wrap; }\n"
-        "</style></head><body style=\" font-family:\'SimSun\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-        "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999; background-color:#ffffff; vertical-align:middle;\">您已使用大众点评</span><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#ff6633; background-color:#ffffff; vertical-align:middle;\">" + str(self.useDpDays) + "</span><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999; background-color:#ffffff; vertical-align:middle;\">天</span></p></body></html>"))
-        self.contentUser.setHtml(_translate("Run", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-        "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-        "p, li { white-space: pre-wrap; }\n"
-        "</style></head><body style=\" font-family:\'SimSun\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-        "<p align=\"right\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#333333; background-color:#ffffff; vertical-align:middle;\">" + self.hello + "</span><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#333333; background-color:#ffffff;\"> </span><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; text-decoration: underline; color:#333333; background-color:#ffffff; vertical-align:middle;\">" + self.userNickName + "</span></a></p></body></html>"))
-        self.contentProvince.setHtml(_translate("Run", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-        "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-        "p, li { white-space: pre-wrap; }\n"
-        "</style></head><body style=\" font-family:\'SimSun\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-        "<p align=\"right\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:11pt;\">请选择省份：</span></p></body></html>"))
-        self.contentCity.setHtml(_translate("Run", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-        "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-        "p, li { white-space: pre-wrap; }\n"
-        "</style></head><body style=\" font-family:\'SimSun\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-        "<p align=\"right\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:11pt;\">请选择城市：</span></p></body></html>"))
+        self.contentOpt.setHtml(_translate("Run", 
+        "<p align=\"center\"><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999;\">收藏数：</span>"
+        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:12pt bold; color:#222222; text-decoration: underline;\">" + str(self.favorShopCount) + "</span>"
+        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999;\">&nbsp;&nbsp;&nbsp;团购券：</span>"
+        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:12pt bold; color:#222222; text-decoration: underline;\">" + str(self.dealCount) + "</span></p>"))
+        self.contentUseday.setHtml(_translate("Run", 
+        "<p align=\"center\"><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999; background-color:#ffffff; vertical-align:middle;\">您已使用大众点评</span>"
+        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:12pt; color:#ff6633; background-color:#ffffff; vertical-align:middle;\">" + str(self.useDpDays) + "</span>"
+        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999; background-color:#ffffff; vertical-align:middle;\">天</span></p>"))
+        self.contentUser.setHtml(_translate("Run", 
+        "<p align=\"right\"><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#333333; background-color:#ffffff; vertical-align:middle;\">" + hello + "</span>"
+        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; text-decoration: underline; color:#333333; background-color:#ffffff; vertical-align:middle;\">" + self.userNickName + "</span></p>"))
+        self.contentProvince.setHtml(_translate("Run", 
+        "<p align=\"right\"><span style=\" font-size:11pt;\">请选择省份：</span></p>"))
+        self.contentCity.setHtml(_translate("Run", 
+        "<p align=\"right\"><span style=\" font-size:11pt;\">请选择城市：</span></p>"))
+
+    def hideEvent(self, event):
+        '''
+        hideEvent()重写
+        @ 最小化——>最小化至托盘
+        '''
+        self.setWindowFlags(QtCore.Qt.SplashScreen | QtCore.Qt.FramelessWindowHint)
+    
+    def closeEvent(self, event):
+        '''
+        closeEvent()重写
+        @ 关闭——>关闭提示
+        '''
+        reply = QtWidgets.QMessageBox.question(self, '提示', '你怎么忍心关掉我鸭？', QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+        if reply == QtWidgets.QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()
 
 class TrayIcon(QtWidgets.QSystemTrayIcon):
     '''
     托盘图标以及托盘菜单
     '''
-    def __init__(self, tray=None):
+    def __init__(self, cookie):
         super().__init__()
-        self.Tray = tray
         self.createTaskbarMenu()
-        Cookie = linkStatusBackendThread.getConfig('config.ini', 'Cookie', 'Cookie')
-        Province = linkStatusBackendThread.getConfig('config.ini', 'Province', 'Province')
-        City = linkStatusBackendThread.getConfig('config.ini', 'City', 'City')
-        self.UI = Ui_Run(Cookie, Province, City, self.Tray)
-        self.BaWangCan = self.UI.Run
-        self.UI.setupUi()
+        self.BaWangCan = Ui_Run(cookie, Province, City)
+        self.BaWangCan.setupUi()
 
     def createTaskbarMenu(self):
         '''
@@ -562,7 +449,6 @@ class TrayIcon(QtWidgets.QSystemTrayIcon):
         self.activated.connect(self.on_Icon_clicked)    # 关联鼠标点击事件
         self.show()
 
-    # @QtCore.pyqtSlot()
     def on_showMenu_clicked(self):
         '''
         显示/隐藏窗口事件
@@ -574,25 +460,21 @@ class TrayIcon(QtWidgets.QSystemTrayIcon):
         else:
             self.BaWangCan.showMinimized()
 
-    # @QtCore.pyqtSlot()
     def on_quitMenu_clicked(self):
         '''
         退出窗口事件
         '''
         app.quit()
-        # self.BaWangCan.close()
 
-    # @QtCore.pyqtSlot()
     def on_Icon_clicked(self, reason):
         '''
-        鼠标点击事件
         鼠标点击信号：
             1：右键单击
             2：左键双击
             3：左键单击
             4：滚轮单击
         '''
-        if reason == 3:
+        if reason == 3 or reason == 4:
             if self.BaWangCan.isMinimized() or not self.BaWangCan.isVisible():
                 self.BaWangCan.setWindowFlags(QtCore.Qt.Window)
                 self.BaWangCan.activateWindow()
@@ -601,15 +483,14 @@ class TrayIcon(QtWidgets.QSystemTrayIcon):
                 self.BaWangCan.showMinimized()
 
 if __name__ == '__main__':
-    app = QtWidgets.QApplication(sys.argv)    # 创建应用程序
-    # MainWindow = QtWidgets.QMainWindow()      # 创建主窗口
-    # MainWindow = QtWidgets.QWidget()      # 创建主窗口
-    New = NewWidgets()    # 重写父类
-    Cookie = linkStatusBackendThread.getConfig('config.ini', 'Cookie', 'Cookie')
-    valid = Ui_Run.getCookieValid(Cookie)
+    Cookie = Config().getConfig('Cookie', 'Cookie')
+    Province = Config().getConfig('Province', 'Province')
+    City = Config().getConfig('City', 'City')
+    # 创建应用程序
+    app = QtWidgets.QApplication(sys.argv)
+    valid = Ui_Run(Cookie).getUserinfo()
     if valid:
-        UI = TrayIcon(New)
+        UI = TrayIcon(Cookie)
     else:
-        Old = QtWidgets.QWidget()
-        UI = Ui_Login(Old)
+        UI = Ui_Login()
     sys.exit(app.exec_())    # 程序执行循环
