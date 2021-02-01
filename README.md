@@ -1,6 +1,3 @@
-
-
-
 # BaWangCan
 一键报名大众点评霸王餐（免费试）
 
@@ -42,6 +39,35 @@ pip install -r requirements.txt
         # 从http://sc.ftqq.com/?c=code获取微信推送的SCKEY，并绑定官微
         SCKEY = 'SCU155771T3549c0427011a83c02d53a4f054055166012211d21350'    # Server酱申请的SCKEY
 ```
+## backendThread线程
+### 1. linkStatusThread
+ - 作用：二维码登录状态的监测线程
+ - 信号定义：【***queryQRCodeStatus***】返回的状态码，主要有如下类型
+```python
+    def run(self):
+        '''
+        run()重写
+        信号定义：
+             -1 ：连接超时
+              0 ：连接中...
+              1 ：扫描成功
+              2 ：确认登录
+              3 ：取消登录
+            Oth ：连接异常
+        '''
+```
+
+### 2. runStatusThread 
+ - 作用：Run按钮状态的显示线程
+ - 信号定义：N/A
+
+### 3. runResultThread
+ - 作用：霸王餐（免费试）的报名线程
+ - 信号定义：N/A
+ 
+当该线程被调用时，为了防止Run再次调用该线程，有以下两种解决方案：
+ 1. 线程锁
+ 2. 取消关联线程
 
 ## FAQ 
 ### 1. 如果大众点评城市列表发生变化了，咋办？
