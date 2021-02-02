@@ -18,13 +18,6 @@ _(:ι」∠)_好饿，但是不想动
 
 睡觉没前途(￣o￣) . z Z　
 
-## 更新 by ZhangJinbao520
-
-> @2021/02/01
-
- 1. 新增二维码登录方式
- 2. 新增微信公众号自动推送
-
 ## 运行环境
 
  - [Python 3](https://www.python.org/)
@@ -47,6 +40,13 @@ pip install -r requirements.txt
         # 从http://sc.ftqq.com/?c=code获取微信推送的SCKEY，并绑定官微
         SCKEY = 'SCU155771T3549c0427011a83c02d53a4f054055166012211d21350'    # Server酱申请的SCKEY
 ```
+
+## 更新 by ZhangJinbao520
+
+> @2021/02/01
+
+ 1. 新增二维码登录方式
+ 2. 新增微信公众号自动推送
 
 ## FAQ 
 ### 1. 如果大众点评城市列表发生变化了，咋办？
