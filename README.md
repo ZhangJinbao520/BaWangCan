@@ -29,9 +29,10 @@ _(:ι」∠)_好饿，但是不想动
 pip install -r requirements.txt
 ```
 
-## 微信推送
+## 微信推送【感谢Server酱～】
 
  - 从[Server酱](http://sc.ftqq.com/?c=code)申请SCKEY，并修改【***backendThread.py***】代码。
+
 ```python
     def weixinTrap(self):
         '''
