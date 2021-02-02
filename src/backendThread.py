@@ -261,7 +261,7 @@ class runResultThread(QThread):
         '''
         # 从http://sc.ftqq.com/?c=code获取微信推送的SCKEY，并绑定官微
         SCKEY = 'SCU155771T3549c0427011a83c02d53a4f054055166012211d21350'    # Server酱申请的SCKEY
-        url = 'https://sc.ftqq.com/' + SCKEY + '.send'
+        url = 'https://sc.ftqq.com/{}.send'.format(SCKEY)
         desp = '''
 {0} ， 用户名：***{1}***
 - 今日报名成功：**{2}**
