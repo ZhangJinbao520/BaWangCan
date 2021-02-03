@@ -44,7 +44,7 @@ class linkStatusThread(QThread):
             if response.status_code == 200:
                 status = response.json()['msg']['status']    # 返回状态码
                 if status == 2:    # 提取cookie
-                    Config().saveConfig('Cookie', 'Cookie', response.headers['set-Cookie'])
+                    Config.saveConfig('Cookie', 'Cookie', response.headers['set-Cookie'])
                 self.linkStatus.emit(int(status))    # 发射信号
                 time.sleep(0.5)    # 等待时间，防止线程一直占用CPU
             else:
@@ -81,24 +81,26 @@ class runResultThread(QThread):
     作用：自动报名免费试，生成表格、并微信推送报名结果
     '''
     runResult = pyqtSignal()    # 自定义信号
-    def __init__(self, cookie, userNickName=None, city=None):
+    def __init__(self, cookie, userNickName=None, cityId=None):
         super().__init__()
         self.Cookie = cookie
         self.userNickName = userNickName
-        self.City = city
+        self.CityId = cityId
         self.Rows = {
             '序号': 'No.',    # 自定义
             '活动名称': 'activityTitle',
             '活动链接': 'detailUrl',
             '活动类型': 'mode',
+            '活动商圈': 'regionName',
+            '报名开始时间': 'applyStartTime',    # 自定义
+            '报名结束时间': 'applyEndTime',    # 自定义
             '活动名额': 'activityCount',    # 自定义
             '报名人数': 'applyCount',    # 自定义
-            '关注人数': 'attentionCount',    # 自定义
             '中奖率（%）': 'winningRate',    # 活动名额/报名人数*100
-            '活动商圈': 'regionName',
+            '关注人数': 'attentionCount',    # 自定义
+            '活动开始时间': 'activityStartTime',    # 自定义
+            '活动结束时间': 'activityEndTime',    # 自定义
             '活动地址': 'activityAddress',    # 自定义
-            '活动时间': 'activityTime',    # 自定义
-            '报名时间': 'applyTime',    # 自定义
             '剩余PASS次数': 'passCount',    # 自定义
             '报名结果': 'applyResult',    # 自定义
         }
@@ -129,7 +131,9 @@ class runResultThread(QThread):
         self.PASS = 0
         self.SKIP = 0
         self.FAIL = 0
+        self.MESSAGE = ''
         count = 1
+        self.MESSAGE += '-----开始报名霸王餐（免费试）-----\n\n'
         activityTitles = self.getBaWangCanList()    # 获取霸王餐列表
         for _activity in activityTitles:
             self.Database[count] = {}
@@ -149,10 +153,14 @@ class runResultThread(QThread):
                 except:
                     pass
             # 霸王餐报名
+            self.MESSAGE += '{}\n\n'.format(self.Database[count]['activityTitle'])
             offlineActivityId = _activity['detailUrl'].replace('http://s.dianping.com/event/', '')
             self.Database[count]['applyResult'] = self.runBaWangCan(offlineActivityId)
+            self.MESSAGE += ' - 【报名结果】：{}\n\n'.format(self.Database[count]['applyResult'])
             self.Database[count]['No.'] = count
             count += 1
+        self.MESSAGE += '-----今日成果预览-----\n\n'
+        self.MESSAGE += '用户名：***{0}***\n\n- 今日报名成功：**{1}**\n\n- 今日报名重复：**{2}**\n\n- 今日报名异常：**{3}**'.format(self.userNickName, self.PASS, self.SKIP, self.FAIL)
         self.excelOperate()    # 表格生成
         self.weixinTrap()    # 微信推送
         self.runResult.emit()
@@ -168,7 +176,7 @@ class runResultThread(QThread):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36'
         }
         data = {
-            'cityId': self.City,
+            'cityId': self.CityId,
             'mode': "",
             'page': 1,
             'type': 0,    # type：霸王餐类型
@@ -195,8 +203,10 @@ class runResultThread(QThread):
         response = requests.get(url=url, headers=headers)
         if response.status_code == 200:
             detail['activityAddress'] = re.search(r'活动地址：</span>\s+(.*)\s', response.text)[1]
-            detail['applyTime'] = re.search(r'报名时间：</span>(.*)', response.text)[1]
-            detail['activityTime'] = re.search(r'活动时间：</span>(.*)</li>', response.text)[1]
+            detail['applyStartTime'] = re.search(r'报名时间：</span>(\d+月\d+日).*(\d+月\d+日).*', response.text)[1]
+            detail['applyEndTime'] = re.search(r'报名时间：</span>(\d+月\d+日).*(\d+月\d+日).*', response.text)[2]
+            detail['activityStartTime'] = re.search(r'活动时间：</span>(\d+月\d+日).*(\d+月\d+日).*</li>', response.text)[1]
+            detail['activityEndTime'] = re.search(r'活动时间：</span>(\d+月\d+日).*(\d+月\d+日).*</li>', response.text)[2]
             detail['activityCount'] = re.search(r'活动名额：</span>\s+<strong class="col-digit">(\d+)</strong> 个', response.text)[1]
             try:
                 detail['passCount'] = re.search(r'支持pass卡（剩余(\d+)个）', response.text)[1]
@@ -237,18 +247,13 @@ class runResultThread(QThread):
         }
         response = requests.post(url=url, headers=headers, data=data)
         if response.status_code == 200:
-            status = response.json()['code']
-            if status == 200:
+            msg = response.json()['msg']['html']
+            if '报名成功' in msg:
                 msg = '报名成功'
                 self.PASS += 1
-            elif status == 500:
-                msg = '重复报名'
+            elif '已经报过名了，不要重复报名' in msg:
                 self.SKIP += 1
-            elif status == 501:
-                msg = '报名门槛不满足'
-                self.FAIL += 1
             else:
-                msg = '报名异常'
                 self.FAIL += 1
         else:
             msg = '报名异常'
@@ -262,19 +267,10 @@ class runResultThread(QThread):
         # 从http://sc.ftqq.com/?c=code获取微信推送的SCKEY，并绑定官微
         SCKEY = 'SCU155771T3549c0427011a83c02d53a4f054055166012211d21350'    # Server酱申请的SCKEY
         url = 'https://sc.ftqq.com/{}.send'.format(SCKEY)
-        desp = '''
-{0} ， 用户名：***{1}***
-- 今日报名成功：**{2}**
-- 今日报名重复：**{3}**
-- 今日报名失败：**{4}**
-            '''.format(time.strftime('%Y-%m-%d %H:%M:%S'), self.userNickName, self.PASS, self.SKIP, self.FAIL)
-        header = {
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36',
-        }
+        header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36',}
         data = {
             'text': '大众点评免费试运行结果',
-            'desp': desp,
+            'desp': self.MESSAGE,
         }
         requests.post(url=url, headers=header, data=data)
 

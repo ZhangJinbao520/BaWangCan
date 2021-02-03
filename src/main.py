@@ -21,7 +21,7 @@
 #    1、二维码登录界面
 #    2、霸王餐（免费试）运行界面
 
-from PyQt5 import QtCore, QtGui, QtWidgets, Qt
+from PyQt5 import QtCore, QtGui, QtWidgets
 from area import dictProvince, dictCity
 from config import Config
 from backendThread import linkStatusThread, runStatusThread, runResultThread
@@ -105,8 +105,8 @@ class Ui_Login(QtWidgets.QWidget):
         self.setQRCodeFromImg()
         self.contentQRCodeInvalid.hide()
         self.btnRefresh.hide()
-        # self.backend.lgtoken = self.QRCode['lgtoken']???
-        self.backend.start(self.QRCode['lgtoken'])
+        self.backend.lgtoken = self.QRCode['lgtoken']
+        self.backend.start()
 
     def queryQRCodeStatus(self, status):
         '''
@@ -201,6 +201,7 @@ class Ui_Run(QtWidgets.QWidget):
         self.Cookie = cookie
         self.Province = province
         self.City = city
+        self.CityId = None
         self.getUserinfo()
 
     def setupUi(self):
@@ -354,6 +355,7 @@ class Ui_Run(QtWidgets.QWidget):
         '''
         if self.boxCity.currentText() != "请选择":
             self.backendStatus.currentText = self.btnRun.text()
+            self.backendResult.CityId = dictCity[self.boxProvince.currentText()][self.boxCity.currentText()]
             self.backendStatus.start()    # 开始线程_1
             self.backendResult.start()    # 开始线程_2
             # 保存'config.ini'
