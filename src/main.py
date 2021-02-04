@@ -133,7 +133,7 @@ class Ui_Login(QtWidgets.QWidget):
             # 确认登录
             self.backend.terminate()    # 终止线程
             self.close()
-            TrayIcon(self.Cookie)
+            self.UI = TrayIcon(Config().getConfig('Cookie', 'Cookie'))    # 必须是self.UI，不能是UI？？？【暂时不知道为什么】
         else:
             # 连接超时、或用户取消登录、或异常
             if status == 3:
@@ -201,7 +201,6 @@ class Ui_Run(QtWidgets.QWidget):
         self.Cookie = cookie
         self.Province = province
         self.City = city
-        self.CityId = None
         self.getUserinfo()
 
     def setupUi(self):

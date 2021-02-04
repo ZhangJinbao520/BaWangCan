@@ -44,9 +44,9 @@ class linkStatusThread(QThread):
             if response.status_code == 200:
                 status = response.json()['msg']['status']    # 返回状态码
                 if status == 2:    # 提取cookie
-                    Config.saveConfig('Cookie', 'Cookie', response.headers['set-Cookie'])
-                self.linkStatus.emit(int(status))    # 发射信号
+                    Config().saveConfig('Cookie', 'Cookie', response.headers['set-Cookie'])
                 time.sleep(0.5)    # 等待时间，防止线程一直占用CPU
+                self.linkStatus.emit(int(status))    # 发射信号
             else:
                 self.linkStatus.emit(int(response.status_code))
 
@@ -161,8 +161,8 @@ class runResultThread(QThread):
             count += 1
         self.MESSAGE += '-----今日成果预览-----\n\n'
         self.MESSAGE += '用户名：***{0}***\n\n- 今日报名成功：**{1}**\n\n- 今日报名重复：**{2}**\n\n- 今日报名异常：**{3}**'.format(self.userNickName, self.PASS, self.SKIP, self.FAIL)
-        self.excelOperate()    # 表格生成
         self.weixinTrap()    # 微信推送
+        self.excelOperate()    # 表格生成
         self.runResult.emit()
 
     def getBaWangCanList(self):
