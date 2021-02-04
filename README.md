@@ -45,7 +45,7 @@ pip install -r requirements.txt
 
 ## 更新 by ZhangJinbao520
 
- - 写作不易，您的Star✨是我继续完善的动力，感谢~
+ - 写作不易，您的Star✨是我前进的动力，感谢~
 
 ### 2021/02/01
 
