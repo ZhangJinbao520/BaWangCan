@@ -244,8 +244,10 @@ class Ui_Run(QtWidgets.QWidget):
         # "开始执行"
         self.btnRun = QtWidgets.QPushButton(self.Run)
         self.btnRun.setGeometry(QtCore.QRect(300, 120, 120, 45))
-        self.btnRun.setStyleSheet('font: 16pt bold;background-color: rgba(240, 240, 240, 250);border: 1px solid rgb(160, 160, 160);border-radius: 6px;')
         self.btnRun.setObjectName("btnRun")
+        # @ 2021/02/04，设置按钮移动变色
+        self.btnRun.setStyleSheet('QPushButton:hover { font: 19pt bold;text-decoration: underline;;background-color: rgba(243, 243, 243, 255);border: 1px solid rgb(150, 150, 150);border-radius: 6px;} QPushButton { font: 19pt bold;background-color: rgba(254, 254, 254, 255);border: 1px solid rgb(150, 150, 150);border-radius: 6px;}')
+        self.btnRun.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))    # 设置鼠标手势
         # "头像"
         self.iconUser = QtWidgets.QLabel(self.Run)
         self.iconUser.setScaledContents(True)
