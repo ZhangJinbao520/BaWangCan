@@ -1,4 +1,5 @@
 
+
 # BaWangCan
 一键报名大众点评霸王餐（免费试）
 
@@ -44,6 +45,8 @@ pip install -r requirements.txt
 
 ## 更新 by ZhangJinbao520
 
+写作不易，您的Star✨是我继续完善的动力，感谢~
+
 ### 2021/02/01
 
  1. 新增二维码登录功能
@@ -55,6 +58,9 @@ pip install -r requirements.txt
  2. 【***src2***】文件夹为精简版本，【***config.ini***】需要自给自足
 
 ## FAQ 
+
+*建议、吐槽、提问请点击【**[Issues](https://github.com/zhangjinbao520/BaWangCan/issues)**】。*
+
 ### 1. 如果大众点评城市列表发生变化了，咋办？
 
 > 	使用【***getCity.py***】脚本，即可生成【***area.py***】文件。
