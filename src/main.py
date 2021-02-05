@@ -214,9 +214,38 @@ class Ui_Run(QtWidgets.QWidget):
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(Ui_Login.getImgFromInternet(ico)['img']), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(icon)
+        # "头像"
+        self.iconUser = QtWidgets.QLabel(self.Run)
+        self.iconUser.setScaledContents(True)
+        self.setImgCycle(self.userFace)
+        # 昵称
+        self.contentUser = QtWidgets.QTextBrowser(self.Run)
+        self.contentUser.setGeometry(QtCore.QRect(0, 106, 150, 25))
+        self.contentUser.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.contentUser.setOpenExternalLinks(True)    # 打开外部链接
+        # 账户等级
+        self.iconLevel = QtWidgets.QLabel(self.Run)
+        self.iconLevel.setGeometry(QtCore.QRect(150, 111, 35, 15))
+        self.iconLevel.setPixmap(QtGui.QPixmap(Ui_Login.getImgFromBase64(self.userLevel)))
+        self.iconLevel.setScaledContents(True)
+        # 注册时间
+        self.contentUseday = QtWidgets.QTextBrowser(self.Run)
+        self.contentUseday.setGeometry(QtCore.QRect(0, 137, 240, 25))
+        self.contentUseday.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        # 收藏&团购券
+        self.contentOpt = QtWidgets.QTextBrowser(self.Run)
+        self.contentOpt.setGeometry(QtCore.QRect(0, 169, 240, 38))
+        self.contentOpt.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.contentOpt.setOpenExternalLinks(True)    # 打开外部链接
+        # "请选择省份"
+        self.contentProvince = QtWidgets.QTextBrowser(self.Run)
+        self.contentProvince.setGeometry(QtCore.QRect(240, 18, 120, 25))
+        # "请选择城市"
+        self.contentCity = QtWidgets.QTextBrowser(self.Run)
+        self.contentCity.setGeometry(QtCore.QRect(240, 63, 120, 25))
         # "省份"下拉列表
         self.boxProvince = QtWidgets.QComboBox(self.Run)
-        self.boxProvince.setGeometry(QtCore.QRect(360, 10, 112, 25))
+        self.boxProvince.setGeometry(QtCore.QRect(360, 15, 112, 25))
         self.boxProvince.setStyleSheet('font: 11pt "华文楷体";border: 1px solid rgb(171, 171, 171);border-radius: 2px;')
         self.boxProvince.setObjectName("boxProvince")
         if self.Province:
@@ -230,7 +259,7 @@ class Ui_Run(QtWidgets.QWidget):
                 self.boxProvince.addItem(key)    # 参数：text、index
         # "城市"下拉列表
         self.boxCity = QtWidgets.QComboBox(self.Run)
-        self.boxCity.setGeometry(QtCore.QRect(360, 55, 112, 25))
+        self.boxCity.setGeometry(QtCore.QRect(360, 60, 112, 25))
         self.boxCity.setStyleSheet('font: 11pt "华文楷体";border: 1px solid rgb(171, 171, 171);border-radius: 2px;')
         if self.City:
             self.boxCity.addItem(self.City)
@@ -243,38 +272,12 @@ class Ui_Run(QtWidgets.QWidget):
             self.boxCity.addItem('请选择')
         # "开始执行"
         self.btnRun = QtWidgets.QPushButton(self.Run)
-        self.btnRun.setGeometry(QtCore.QRect(300, 120, 120, 45))
+        self.btnRun.setGeometry(QtCore.QRect(300, 125, 120, 45))
         self.btnRun.setObjectName("btnRun")
-        # @ 2021/02/04，设置按钮移动变色
-        self.btnRun.setStyleSheet('QPushButton:hover { font: 19pt bold;text-decoration: underline;;background-color: rgba(243, 243, 243, 255);border: 1px solid rgb(150, 150, 150);border-radius: 6px;} QPushButton { font: 19pt bold;background-color: rgba(254, 254, 254, 255);border: 1px solid rgb(150, 150, 150);border-radius: 6px;}')
         self.btnRun.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))    # 设置鼠标手势
-        # "头像"
-        self.iconUser = QtWidgets.QLabel(self.Run)
-        self.iconUser.setScaledContents(True)
-        self.setImgCycle(self.userFace)
-        # 账户等级
-        self.iconLevel = QtWidgets.QLabel(self.Run)
-        self.iconLevel.setGeometry(QtCore.QRect(150, 110, 35, 15))
-        self.iconLevel.setPixmap(QtGui.QPixmap(Ui_Login.getImgFromBase64(self.userLevel)))
-        self.iconLevel.setScaledContents(True)
-        # 收藏&团购券
-        self.contentOpt = QtWidgets.QTextBrowser(self.Run)
-        self.contentOpt.setGeometry(QtCore.QRect(0, 163, 240, 55))
-        self.contentOpt.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        # 注册时间
-        self.contentUseday = QtWidgets.QTextBrowser(self.Run)
-        self.contentUseday.setGeometry(QtCore.QRect(0, 134, 240, 25))
-        self.contentUseday.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        # 昵称
-        self.contentUser = QtWidgets.QTextBrowser(self.Run)
-        self.contentUser.setGeometry(QtCore.QRect(0, 105, 150, 25))
-        self.contentUser.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        # "请选择省份"
-        self.contentProvince = QtWidgets.QTextBrowser(self.Run)
-        self.contentProvince.setGeometry(QtCore.QRect(240, 12, 120, 25))
-        # "请选择城市"
-        self.contentCity = QtWidgets.QTextBrowser(self.Run)
-        self.contentCity.setGeometry(QtCore.QRect(240, 57, 120, 25))
+        # @ 2021/02/04，设置按钮移动变色
+        self.btnRun.setStyleSheet('QPushButton:hover { font: 16pt bold;text-decoration: underline;;background-color: rgba(238, 232, 228, 255);border: 1px solid rgb(150, 150, 150);border-radius: 6px;} QPushButton { font: 16pt bold;background-color: rgba(254, 254, 254, 255);border: 1px solid rgb(150, 150, 150);border-radius: 6px;}')
+        # @ 2021/02/04，设置按钮移动变色
         # 信号关联槽位
         QtCore.QMetaObject.connectSlotsByName(self)    # 自动连接槽，使得装饰器@QtCore.pyqtSlot可生效
         self.backendStatus = runStatusThread()    # 创建线程_1
@@ -301,6 +304,9 @@ class Ui_Run(QtWidgets.QWidget):
                 self.favorShopCount = msg['favorShopCount']
                 self.dealCount = msg['dealCount']
                 userInfo = msg['userInfo']
+                # @ 2021/02/05，插入超链接
+                self.userId = userInfo['userId']
+                # @ 2021/02/05，插入超链接
                 self.userFace = userInfo['userFace']
                 self.userNickName = userInfo['userNickName']
                 self.useDpDays = userInfo['useDpDays']
@@ -390,22 +396,24 @@ class Ui_Run(QtWidgets.QWidget):
             hello = "晚上好， "
         self.setWindowTitle(_translate("Run", "大众点评免费试"))
         self.btnRun.setText(_translate("Run", "Run"))
-        self.contentOpt.setHtml(_translate("Run", 
-        "<p align=\"center\"><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999;\">收藏数：</span>"
-        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:12pt bold; color:#222222; text-decoration: underline;\">" + str(self.favorShopCount) + "</span>"
-        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999;\">&nbsp;&nbsp;&nbsp;团购券：</span>"
-        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:12pt bold; color:#222222; text-decoration: underline;\">" + str(self.dealCount) + "</span></p>"))
-        self.contentUseday.setHtml(_translate("Run", 
-        "<p align=\"center\"><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999; background-color:#ffffff; vertical-align:middle;\">您已使用大众点评</span>"
-        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:12pt; color:#ff6633; background-color:#ffffff; vertical-align:middle;\">" + str(self.useDpDays) + "</span>"
-        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999; background-color:#ffffff; vertical-align:middle;\">天</span></p>"))
-        self.contentUser.setHtml(_translate("Run", 
-        "<p align=\"right\"><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#333333; background-color:#ffffff; vertical-align:middle;\">" + hello + "</span>"
-        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; text-decoration: underline; color:#333333; background-color:#ffffff; vertical-align:middle;\">" + self.userNickName + "</span></p>"))
         self.contentProvince.setHtml(_translate("Run", 
         "<p align=\"right\"><span style=\" font-size:11pt;\">请选择省份：</span></p>"))
         self.contentCity.setHtml(_translate("Run", 
         "<p align=\"right\"><span style=\" font-size:11pt;\">请选择城市：</span></p>"))
+        self.contentUseday.setHtml(_translate("Run", 
+        "<p align=\"center\"><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999; background-color:#ffffff; vertical-align:middle;\">您已使用大众点评&nbsp;</span>"
+        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:13pt; color:#ff6633; background-color:#ffffff; vertical-align:middle;\">" + str(self.useDpDays) + "</span>"
+        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999; background-color:#ffffff; vertical-align:middle;\">&nbsp;天</span></p>"))
+        # @ 2021/02/05，插入超链接
+        self.contentOpt.setHtml(_translate("Run", 
+        "<p align=\"center\"><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999;\">收藏数：</span>"
+        "<span style=\" font-size:14pt bold;\"><a href=http://www.dianping.com/member/" + str(self.userId) + "/wishlists>" + str(self.favorShopCount) + "</a></span>"
+        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999;\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;团购券：</span>"
+        "<span style=\" font-size:14pt bold;\"><a href=http://t.dianping.com/account/coupons>" + str(self.dealCount) + "</a></span></p>"))
+        self.contentUser.setHtml(_translate("Run", 
+        "<p align=\"right\"><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#333333; background-color:#ffffff; vertical-align:middle;\">" + hello + "</span>"
+        "<span style=\" font-size:14pt bold;\"><a href=http://www.dianping.com/member/" + str(self.userId) + ">" + self.userNickName + "</a></span></p>"))
+        # @ 2021/02/05，插入超链接
 
     def hideEvent(self, event):
         '''
