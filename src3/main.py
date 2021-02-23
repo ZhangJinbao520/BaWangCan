@@ -9,7 +9,7 @@
 # 作用：
 #    1、霸王餐（免费试）的报名线程
 
-import requests, time, re, json，os
+import requests, time, re, json, os
 
 class runResultThread():
     '''
