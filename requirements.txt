@@ -1,3 +1,4 @@
 configparser
+openpyxl
 PyQt5
 requests
