@@ -9,16 +9,14 @@
 # 作用：
 #    1、霸王餐（免费试）的报名线程
 
-from config import Config
 import requests, time, re, json
+from config import Config
 
-# class runResultThread(QThread):
-class runResultThread(object):
+class runResultThread():
     '''
     免费试执行的自定义线程
     作用：自动报名免费试，生成表格、并微信推送报名结果
     '''
-    # runResult = pyqtSignal()    # 自定义信号
     def __init__(self, cookie, userNickName=None, cityId=None):
         super().__init__()
         self.Cookie = cookie
@@ -91,7 +89,6 @@ class runResultThread(object):
         self.MESSAGE += '用户名：***{0}***\n\n- 今日报名成功：**{1}**\n\n- 今日报名重复：**{2}**\n\n- 今日报名异常：**{3}**'.format(self.userNickName, self.PASS, self.SKIP, self.FAIL)
         self.excelOperate()    # 表格生成
         self.weixinTrap()    # 微信推送
-        # self.runResult.emit()
 
     def getBaWangCanList(self):
         '''
@@ -131,10 +128,18 @@ class runResultThread(object):
         response = requests.get(url=url, headers=headers)
         if response.status_code == 200:
             detail['activityAddress'] = re.search(r'活动地址：</span>\s+(.*)\s', response.text)[1]
-            detail['applyStartTime'] = re.search(r'报名时间：</span>(\d+月\d+日).*(\d+月\d+日).*', response.text)[1]
-            detail['applyEndTime'] = re.search(r'报名时间：</span>(\d+月\d+日).*(\d+月\d+日).*', response.text)[2]
-            detail['activityStartTime'] = re.search(r'活动时间：</span>(\d+月\d+日).*(\d+月\d+日).*</li>', response.text)[1]
-            detail['activityEndTime'] = re.search(r'活动时间：</span>(\d+月\d+日).*(\d+月\d+日).*</li>', response.text)[2]
+            try:
+                detail['applyStartTime'] = re.search(r'报名时间：</span>(\d+月\d+日).*(\d+月\d+日).*', response.text)[1]
+                detail['applyEndTime'] = re.search(r'报名时间：</span>(\d+月\d+日).*(\d+月\d+日).*', response.text)[2]
+            except:
+                detail['applyStartTime'] = re.search(r'报名时间：</span>(\d+月\d+日).*', response.text)[1]
+                detail['applyEndTime'] = ''
+            try:
+                detail['activityStartTime'] = re.search(r'活动时间：</span>(\d+月\d+日).*(\d+月\d+日).*</li>', response.text)[1]
+                detail['activityEndTime'] = re.search(r'活动时间：</span>(\d+月\d+日).*(\d+月\d+日).*</li>', response.text)[2]
+            except:
+                detail['activityStartTime'] = re.search(r'活动时间：</span>(\d+月\d+日).*</li>', response.text)[1]
+                detail['activityEndTime'] = ''
             detail['activityCount'] = re.search(r'活动名额：</span>\s+<strong class="col-digit">(\d+)</strong> 个', response.text)[1]
             try:
                 detail['passCount'] = re.search(r'支持pass卡（剩余(\d+)个）', response.text)[1]
@@ -193,7 +198,7 @@ class runResultThread(object):
         微信推送
         '''
         # 从http://sc.ftqq.com/?c=code获取微信推送的SCKEY，并绑定官微
-        # SCKEY = ''    # Server酱申请的SCKEY
+        # SCKEY = 'SCU155771T3549c0427011a83c02d53a4f054055166012211d21350'    # Server酱申请的SCKEY
         url = 'https://sc.ftqq.com/{}.send'.format(self.SCKEY)
         header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36',}
         data = {
