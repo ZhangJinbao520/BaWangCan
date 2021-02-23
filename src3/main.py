@@ -127,10 +127,10 @@ class runResultThread():
         requests.post(url=url, headers=header, data=data)
 
 if __name__ == '__main__':
-    COOKIE = os.environ['COOKIE']
+    C = os.environ['COOKIE']
     NICKNAME = os.environ['NICKNAME']
     CITY = os.environ['CITY']
     CITYID = os.environ['CITYID']
     SCKEY = os.environ['SCKEY']
-    BaWangCan = runResultThread(COOKIE, NICKNAME, CITY, CITYID, SCKEY)
+    BaWangCan = runResultThread(C, NICKNAME, CITY, CITYID, SCKEY)
     BaWangCan.run()
