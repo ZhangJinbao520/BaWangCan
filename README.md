@@ -40,7 +40,7 @@ pip install -r requirements.txt
         微信推送
         '''
         # 从http://sc.ftqq.com/?c=code获取微信推送的SCKEY，并绑定官微
-        SCKEY = ''    # Server酱申请的SCKEY
+        SCKEY = '填写申请到的SCKEY'    # Server酱申请的SCKEY
 ```
 
 ## 更新 by ZhangJinbao520
