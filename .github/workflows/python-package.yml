@@ -4,10 +4,12 @@
 name: Python package
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+#   push:
+#     branches: [ master ]
+#   pull_request:
+#     branches: [ master ]
+  schedule:
+    - cron: '0 00 00 ? * MON-FRI'
 
 jobs:
   build:
