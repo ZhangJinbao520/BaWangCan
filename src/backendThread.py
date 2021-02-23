@@ -12,6 +12,7 @@
 #    3、霸王餐（免费试）的报名线程
 
 from PyQt5.QtCore import QThread, pyqtSignal
+from openpyxl import Workbook
 from config import Config
 import requests, time, re, json
 
@@ -81,10 +82,11 @@ class runResultThread(QThread):
     作用：自动报名免费试，生成表格、并微信推送报名结果
     '''
     runResult = pyqtSignal()    # 自定义信号
-    def __init__(self, cookie, userNickName=None, cityId=None):
+    def __init__(self, cookie, userNickName=None, city=None, cityId=None):
         super().__init__()
         self.Cookie = cookie
         self.userNickName = userNickName
+        self.City = city
         self.CityId = cityId
         self.Rows = {
             '序号': 'No.',    # 自定义
@@ -134,6 +136,8 @@ class runResultThread(QThread):
         self.MESSAGE = ''
         count = 1
         self.MESSAGE += '-----开始报名霸王餐（免费试）-----\n\n'
+        self.MESSAGE += ' - 城市：***{}***\n\n'.format(self.City)
+        self.MESSAGE += '--------------------------------\n\n'
         activityTitles = self.getBaWangCanList()    # 获取霸王餐列表
         for _activity in activityTitles:
             self.Database[count] = {}
@@ -203,10 +207,18 @@ class runResultThread(QThread):
         response = requests.get(url=url, headers=headers)
         if response.status_code == 200:
             detail['activityAddress'] = re.search(r'活动地址：</span>\s+(.*)\s', response.text)[1]
-            detail['applyStartTime'] = re.search(r'报名时间：</span>(\d+月\d+日).*(\d+月\d+日).*', response.text)[1]
-            detail['applyEndTime'] = re.search(r'报名时间：</span>(\d+月\d+日).*(\d+月\d+日).*', response.text)[2]
-            detail['activityStartTime'] = re.search(r'活动时间：</span>(\d+月\d+日).*(\d+月\d+日).*</li>', response.text)[1]
-            detail['activityEndTime'] = re.search(r'活动时间：</span>(\d+月\d+日).*(\d+月\d+日).*</li>', response.text)[2]
+            try:
+                detail['applyStartTime'] = re.search(r'报名时间：</span>(\d+月\d+日).*(\d+月\d+日).*', response.text)[1]
+                detail['applyEndTime'] = re.search(r'报名时间：</span>(\d+月\d+日).*(\d+月\d+日).*', response.text)[2]
+            except:
+                detail['applyStartTime'] = re.search(r'报名时间：</span>(\d+月\d+日).*', response.text)[1]
+                detail['applyEndTime'] = ''
+            try:
+                detail['activityStartTime'] = re.search(r'活动时间：</span>(\d+月\d+日).*(\d+月\d+日).*</li>', response.text)[1]
+                detail['activityEndTime'] = re.search(r'活动时间：</span>(\d+月\d+日).*(\d+月\d+日).*</li>', response.text)[2]
+            except:
+                detail['activityStartTime'] = re.search(r'活动时间：</span>(\d+月\d+日).*</li>', response.text)[1]
+                detail['activityEndTime'] = ''
             detail['activityCount'] = re.search(r'活动名额：</span>\s+<strong class="col-digit">(\d+)</strong> 个', response.text)[1]
             try:
                 detail['passCount'] = re.search(r'支持pass卡（剩余(\d+)个）', response.text)[1]
@@ -279,7 +291,6 @@ class runResultThread(QThread):
         表格数据写入，并保存为.xlsx文件
         return : Excel表格
         '''
-        from openpyxl import Workbook
         excel = Workbook()
         sheet = excel.active    # 激活表格
         sheet.append(list(self.Rows.keys()))   # 写入首行数据

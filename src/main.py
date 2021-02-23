@@ -362,6 +362,7 @@ class Ui_Run(QtWidgets.QWidget):
         '''
         if self.boxCity.currentText() != "请选择":
             self.backendStatus.currentText = self.btnRun.text()
+            self.backendResult.City = self.boxCity.currentText()
             self.backendResult.CityId = dictCity[self.boxProvince.currentText()][self.boxCity.currentText()]
             self.backendStatus.start()    # 开始线程_1
             self.backendResult.start()    # 开始线程_2
@@ -401,18 +402,18 @@ class Ui_Run(QtWidgets.QWidget):
         self.contentCity.setHtml(_translate("Run", 
         "<p align=\"right\"><span style=\" font-size:11pt;\">请选择城市：</span></p>"))
         self.contentUseday.setHtml(_translate("Run", 
-        "<p align=\"center\"><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999; background-color:#ffffff; vertical-align:middle;\">您已使用大众点评&nbsp;</span>"
-        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:13pt; color:#ff6633; background-color:#ffffff; vertical-align:middle;\">" + str(self.useDpDays) + "</span>"
-        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999; background-color:#ffffff; vertical-align:middle;\">&nbsp;天</span></p>"))
+        "<p align=\"center\"><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999; background-color:#ffffff; vertical-align:middle;\">您已使用大众点评</span>"
+        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:12pt; color:#ff6633; background-color:#ffffff; vertical-align:middle;\">" + str(self.useDpDays) + "</span>"
+        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999; background-color:#ffffff; vertical-align:middle;\">天</span></p>"))
         # @ 2021/02/05，插入超链接
         self.contentOpt.setHtml(_translate("Run", 
         "<p align=\"center\"><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999;\">收藏数：</span>"
-        "<span style=\" font-size:14pt bold;\"><a href=http://www.dianping.com/member/" + str(self.userId) + "/wishlists>" + str(self.favorShopCount) + "</a></span>"
-        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999;\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;团购券：</span>"
-        "<span style=\" font-size:14pt bold;\"><a href=http://t.dianping.com/account/coupons>" + str(self.dealCount) + "</a></span></p>"))
+        "<span style=\" font-size:13pt bold;\"><a href=http://www.dianping.com/member/" + str(self.userId) + "/wishlists>" + str(self.favorShopCount) + "</a></span>"
+        "<span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#999999;\">&nbsp;&nbsp;团购券：</span>"
+        "<span style=\" font-size:13pt bold;\"><a href=http://t.dianping.com/account/coupons>" + str(self.dealCount) + "</a></span></p>"))
         self.contentUser.setHtml(_translate("Run", 
         "<p align=\"right\"><span style=\" font-family:\'PingFangSC-Regular\',\'Microsoft YaHei\',\'Hiragino Sans GB\',\'Helvetica\'; font-size:11pt; color:#333333; background-color:#ffffff; vertical-align:middle;\">" + hello + "</span>"
-        "<span style=\" font-size:14pt bold;\"><a href=http://www.dianping.com/member/" + str(self.userId) + ">" + self.userNickName + "</a></span></p>"))
+        "<span style=\" font-size:13pt bold;\"><a href=http://www.dianping.com/member/" + str(self.userId) + ">" + self.userNickName + "</a></span></p>"))
         # @ 2021/02/05，插入超链接
 
     def hideEvent(self, event):
