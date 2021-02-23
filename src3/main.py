@@ -32,12 +32,14 @@ class runResultThread():
         self.SKIP = 0
         self.FAIL = 0
         self.MESSAGE = ''
+        count = 1
         activityTitles = self.getBaWangCanList()    # 获取霸王餐列表
         for _activity in activityTitles:
             # 霸王餐报名
             self.MESSAGE += '{0}、{1}\n'.format(count, _activity['activityTitle'])
             offlineActivityId = _activity['detailUrl'].replace('http://s.dianping.com/event/', '')
             self.MESSAGE += ' - 【报名结果】：{}\n\n'.format(self.runBaWangCan(offlineActivityId))
+            count += 1
         self.MESSAGE = '---\n\n-----开始报名霸王餐（免费试）-----\n\n用户名：***{0}***\n\n城 市：***{1}***\n\n- 今日报名成功：**{2}**\n\n- 今日报名重复：**{3}**\n\n- 今日报名异常：**{4}**\n\n---\n\n-----今日成果预览-----\n\n'.format(self.userNickName, self.City, self.PASS, self.SKIP, self.FAIL) + self.MESSAGE
         self.weixinTrap()    # 微信推送
 
