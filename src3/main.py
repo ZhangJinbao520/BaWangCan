@@ -16,12 +16,12 @@ class runResultThread():
     免费试执行的自定义线程
     作用：自动报名免费试，生成表格、并微信推送报名结果
     '''
-    def __init__(self, cookie, userNickName=None, city=None, CityId=None, SCKEY=None):
+    def __init__(self, Cookie, userNickName=None, City=None, CityId=None, SCKEY=None):
         super().__init__()
-        self.Cookie = cookie
+        self.Cookie = Cookie
         self.userNickName = userNickName
-        self.City = city
-        self.CityId = cityId
+        self.City = City
+        self.CityId = CityId
         self.SCKEY = SCKEY
 
     def run(self):
@@ -118,6 +118,7 @@ class runResultThread():
         微信推送
         '''
         # 从http://sc.ftqq.com/?c=code获取微信推送的SCKEY，并绑定官微
+        # SCKEY = 'SCU155771T3549c0427011a83c02d53a4f054055166012211d21350'    # Server酱申请的SCKEY
         url = 'https://sc.ftqq.com/{}.send'.format(self.SCKEY)
         header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36',}
         data = {
