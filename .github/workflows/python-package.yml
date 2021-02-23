@@ -30,3 +30,9 @@ jobs:
     - name: Run
       run: |
         python src3/main.py
+      env:
+        COOKIE: ${{ secrets.COOKIE }}
+        NICKNAME: ${{ secrets.NICKNAME }}
+        CITY: ${{ secrets.CITY }}
+        CITYID: ${{ secrets.CITYID }}
+        SCKEY: ${{ secrets.SCKEY }}
