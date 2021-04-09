@@ -187,7 +187,7 @@ class Ui_Login(QtWidgets.QWidget):
         img = QtGui.QImage.fromData(response.content)    # 返回bytes类型
         try:
             # 返回lgtoken，用于queryQRCodeStatus(一个QRCode对应一个lgtoken)
-            lgtoken = re.search(r'lgtoken=(.*); Domain(.*)', response.headers['set-Cookie'])[1]
+            lgtoken = re.search(r'lgtoken=(.*); ?Domain', response.headers['Set-Cookie'])[1]
         except:
             lgtoken = None
         return {'img': img, 'lgtoken': lgtoken}
@@ -276,7 +276,7 @@ class Ui_Run(QtWidgets.QWidget):
         self.btnRun.setObjectName("btnRun")
         self.btnRun.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))    # 设置鼠标手势
         # @ 2021/02/04，设置按钮移动变色
-        self.btnRun.setStyleSheet('QPushButton:hover { font: 16pt bold;text-decoration: underline;;background-color: rgba(238, 232, 228, 255);border: 1px solid rgb(150, 150, 150);border-radius: 6px;} QPushButton { font: 16pt bold;background-color: rgba(254, 254, 254, 255);border: 1px solid rgb(150, 150, 150);border-radius: 6px;}')
+        self.btnRun.setStyleSheet('QPushButton:hover { font: 16pt bold;text-decoration: underline;;background-color: rgba(242, 242, 242, 255);border: 1px solid rgb(150, 150, 150);border-radius: 6px;} QPushButton { font: 16pt bold;background-color: rgba(254, 254, 254, 255);border: 1px solid rgb(150, 150, 150);border-radius: 6px;}')
         # @ 2021/02/04，设置按钮移动变色
         # 信号关联槽位
         QtCore.QMetaObject.connectSlotsByName(self)    # 自动连接槽，使得装饰器@QtCore.pyqtSlot可生效
