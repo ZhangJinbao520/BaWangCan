@@ -135,9 +135,6 @@ class runResultThread(QThread):
         self.FAIL = 0
         self.MESSAGE = ''
         count = 1
-        self.MESSAGE += '-----开始报名霸王餐（免费试）-----\n\n'
-        self.MESSAGE += ' - 城市：***{}***\n\n'.format(self.City)
-        self.MESSAGE += '--------------------------------\n\n'
         activityTitles = self.getBaWangCanList()    # 获取霸王餐列表
         for _activity in activityTitles:
             self.Database[count] = {}
@@ -157,14 +154,17 @@ class runResultThread(QThread):
                 except:
                     pass
             # 霸王餐报名
-            self.MESSAGE += '{}\n\n'.format(self.Database[count]['activityTitle'])
+            # @ 2021/02/23，修订推文样式
+            self.MESSAGE += '{0}、{1}\n'.format(count, _activity['activityTitle'])
+            # @ 2021/02/23，修订推文样式
             offlineActivityId = _activity['detailUrl'].replace('http://s.dianping.com/event/', '')
             self.Database[count]['applyResult'] = self.runBaWangCan(offlineActivityId)
             self.MESSAGE += ' - 【报名结果】：{}\n\n'.format(self.Database[count]['applyResult'])
             self.Database[count]['No.'] = count
             count += 1
-        self.MESSAGE += '-----今日成果预览-----\n\n'
-        self.MESSAGE += '用户名：***{0}***\n\n- 今日报名成功：**{1}**\n\n- 今日报名重复：**{2}**\n\n- 今日报名异常：**{3}**'.format(self.userNickName, self.PASS, self.SKIP, self.FAIL)
+        # @ 2021/02/23，修订推文样式
+        self.MESSAGE = '---\n\n-----开始报名霸王餐（免费试）-----\n\n用户名：***{0}***\n\n城 市：***{1}***\n\n- 今日报名成功：**{2}**\n\n- 今日报名重复：**{3}**\n\n- 今日报名异常：**{4}**\n\n---\n\n-----今日成果预览-----\n\n'.format(self.userNickName, self.City, self.PASS, self.SKIP, self.FAIL) + self.MESSAGE
+        # @ 2021/02/23，修订推文样式
         self.weixinTrap()    # 微信推送
         self.excelOperate()    # 表格生成
         self.runResult.emit()
@@ -254,8 +254,8 @@ class runResultThread(QThread):
             'branchId': '',
             'usePassCard': '0',
             'passCardNo': '',
-            'isShareSina': 'false',
-            'isShareQQ': 'false',
+            'isShareSina': 'true',
+            'isShareQQ': 'true',
         }
         response = requests.post(url=url, headers=headers, data=data)
         if response.status_code == 200:
@@ -277,7 +277,7 @@ class runResultThread(QThread):
         微信推送
         '''
         # 从http://sc.ftqq.com/?c=code获取微信推送的SCKEY，并绑定官微
-        SCKEY = ''    # Server酱申请的SCKEY
+        SCKEY = 'SCU155771T3549c0427011a83c02d53a4f054055166012211d21350'    # Server酱申请的SCKEY
         url = 'https://sc.ftqq.com/{}.send'.format(SCKEY)
         header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36',}
         data = {
