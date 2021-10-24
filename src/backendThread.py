@@ -14,7 +14,10 @@
 from PyQt5.QtCore import QThread, pyqtSignal
 from openpyxl import Workbook
 from config import Config
-import requests, time, re, json
+import requests
+import time
+import re
+import json
 
 class linkStatusThread(QThread):
     '''

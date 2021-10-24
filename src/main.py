@@ -25,7 +25,11 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from area import dictProvince, dictCity
 from config import Config
 from backendThread import linkStatusThread, runStatusThread, runResultThread
-import requests, time, re, base64, sys
+import requests
+import time
+import re
+import base64
+import sys
 
 class Ui_Login(QtWidgets.QWidget):
     '''
