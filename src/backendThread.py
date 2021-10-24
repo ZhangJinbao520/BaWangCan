@@ -72,7 +72,7 @@ class runStatusThread(QThread):
         while True:
             if self.currentText == "执行中.. ":
                 self.runStatus.emit("执行中...")
-            elif self.currentText == "执行中..." or self.currentText == "Run":
+            elif self.currentText in ("执行中...", "Run"):
                 self.runStatus.emit("执行中.. ")
             time.sleep(0.5)
 

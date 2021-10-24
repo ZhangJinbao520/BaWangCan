@@ -486,7 +486,7 @@ class TrayIcon(QtWidgets.QSystemTrayIcon):
             3：左键单击
             4：滚轮单击
         '''
-        if reason == 3 or reason == 4:
+        if reason in (3, 4):
             if self.BaWangCan.isMinimized() or not self.BaWangCan.isVisible():
                 self.BaWangCan.setWindowFlags(QtCore.Qt.Window)
                 self.BaWangCan.activateWindow()
